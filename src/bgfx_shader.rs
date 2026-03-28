@@ -37,11 +37,14 @@ impl<'a> TryFromCtx<'a> for BgfxShader {
         let mut size = None;
         if let Ok(attr_count) = input.gread::<u8>(offset) {
             if attr_count != 0 {
-                // let _: u16 = input.gread(offset)?;
                 let parsed: Result<Vec<u16>, scroll::Error> =
                     (0..attr_count).map(|_| input.gread(offset)).collect();
                 attributes = Some(parsed?);
                 size = Some(input.gread(offset)?);
+            } else {
+                // BUGFIX: We must save an empty vector instead of None.
+                // This forces the writer to correctly output the `0` byte back to the file!
+                attributes = Some(Vec::new());
             }
         }
         Ok((
